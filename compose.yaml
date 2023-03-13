@@ -1,0 +1,18 @@
+#this file tells the program to create the database and the backend
+#and docker is used to run programs on an isolated part of your computer
+
+services:
+  db:
+    build: ./Database/
+    ports:
+      - "5555:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: abc123
+      MARIADB_DATABASE: abc
+
+  backend:
+    build: ./Backend/
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./Backend/src/:/backend/src
