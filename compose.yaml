@@ -16,3 +16,10 @@ services:
       - "8080:8080"
     volumes:
       - ./Backend/src/:/backend/src
+
+  frontend:
+    build: ./Frontend
+    ports: 
+      - "5173:5173"
+    volumes:
+      - ./Frontend/code/:/frontend/code

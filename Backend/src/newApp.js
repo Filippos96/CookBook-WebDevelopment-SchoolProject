@@ -30,9 +30,8 @@ app.get("/recipes", async function(request, response){
     //#watch listens to changes in the code, making it restart the aplication
     //CMD node --watch ./src/app.js
     try {
-        const connection = await pool.getConnection()
         const query = "SELECT * FROM recipes ORDER BY title"
-        const recipes = await connection.query(query)
+        const recipes = await pool.query(query)
         response.status(200).json(recipes) // send the retrieved data back in the response
     } catch(error) {
         console.log(error)
@@ -42,10 +41,10 @@ app.get("/recipes", async function(request, response){
 
 app.get("/recipes/:id", async function(request, response){
     try {
-        const connection = await pool.getConnection()
+        
         const recipeId = request.params.id // retrieve the recipe ID from the request parameters
         const query = "SELECT * FROM recipes WHERE id = ?"
-        const recipe = await connection.query(query, [recipeId])
+        const recipe = await pool.query(query, [recipeId])
         response.status(200).json(recipe) // send the retrieved data back in the response
     } catch(error) {
         console.log(error)
@@ -58,9 +57,9 @@ app.post("/recipes", async function(request, response){
     try{
         const newRecipe = request.body
         const accountId = 1 //this line needs editing
-        const connection = await pool.getConnection()
+        
         const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
-        await connection.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
+        await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
         response.status(201).end()
     }
     catch(error){
@@ -72,10 +71,10 @@ app.post("/recipes", async function(request, response){
 app.put("/recipes/:id", async function(request, response){
     try{
         const newRecipe = request.body
-        const connection = await pool.getConnection()
+        
         const recipeId = request.params.id
         const query = "UPDATE recipes SET title = ?, ingredients = ?, directives = ? WHERE id = ?"
-        await connection.query(query , [newRecipe.title, newRecipe.ingredients, newRecipe.directives, recipeId])
+        await pool.query(query , [newRecipe.title, newRecipe.ingredients, newRecipe.directives, recipeId])
         response.status(200).end()
     }
     catch(error){
@@ -86,10 +85,10 @@ app.put("/recipes/:id", async function(request, response){
 
 app.delete("/recipes/:id", async function(request, response){
     try{
-        const connection = await pool.getConnection()
+        
         const recipeId = request.params.id
         const query = "DELETE FROM recipes WHERE id = ?"
-        await connection.query(query, [recipeId])
+        await pool.query(query, [recipeId])
         response.status(200).end()
     }
     catch(error){
@@ -100,9 +99,9 @@ app.delete("/recipes/:id", async function(request, response){
 
 app.get("/comments", async function(request, response){
     try {
-        const connection = await pool.getConnection()
+        
         const query = "SELECT * FROM comments"
-        const comments = await connection.query(query)
+        const comments = await pool.query(query)
         response.status(200).json(comments) // send the retrieved data back in the response
     } catch(error) {
         console.log(error)
@@ -112,10 +111,10 @@ app.get("/comments", async function(request, response){
 
 app.get("/recipes/:id/comments", async function(request, response){
     try{
-        const connection = await pool.getConnection()
+        
         const recipeId = request.params.id
         const query = "SELECT * FROM comments WHERE recipeId = ?"
-        const comments = await connection.query(query, [recipeId])
+        const comments = await pool.query(query, [recipeId])
         response.status(200).json(comments)
     }
     catch(error){
@@ -130,9 +129,9 @@ app.post("/recipes/:id/comments", async function(request, response){
         const newComment = request.body
         const accountId = 1 //this line needs editing
         const recipeId = request.params.id
-        const connection = await pool.getConnection()
+        
         const query = "INSERT INTO comments (accountId, recipeId, comment) VALUES (?, ?, ?)"
-        await connection.query(query, [accountId, recipeId, newComment.comment])
+        await pool.query(query, [accountId, recipeId, newComment.comment])
         response.status(201).end()
     }
     catch(error){
@@ -145,9 +144,9 @@ app.put("/comments/:id", async function(request, response){
     try{
         const newComment = request.body
         const commentId = request.params.id
-        const connection = await pool.getConnection()
+        
         const query = "UPDATE comments SET comment = ? WHERE id = ?"
-        await connection.query(query, [newComment.comment, commentId])
+        await pool.query(query, [newComment.comment, commentId])
         response.status(201).end()
     }
     catch(error){
@@ -158,10 +157,10 @@ app.put("/comments/:id", async function(request, response){
 
 app.delete("/comments/:id", async function(request, response){
     try{
-        const connection = await pool.getConnection()
+        
         const commentId = request.params.id
         const query = "DELETE FROM comments WHERE id = ?"
-        await connection.query(query, [commentId])
+        await pool.query(query, [commentId])
         response.status(200).end()
     }
     catch(error){
@@ -172,9 +171,9 @@ app.delete("/comments/:id", async function(request, response){
 
 app.get("/accounts", async function(request, response){
     try {
-        const connection = await pool.getConnection()
+        
         const query = "SELECT * FROM accounts"
-        const accounts = await connection.query(query)
+        const accounts = await pool.query(query)
         response.status(200).json(accounts) // send the retrieved data back in the response
     } catch(error) {
         console.log(error)
@@ -185,9 +184,9 @@ app.get("/accounts", async function(request, response){
 app.get("/accounts/:id", async function(request, response){
     try{
         const accountId = request.params.id
-        const connection = await pool.getConnection()
+        
         const query = "SELECT * FROM accounts WHERE id = ?"
-        const account = await connection.query(query, [accountId])
+        const account = await pool.query(query, [accountId])
         response.status(200).json(account)
     }
     catch(error){
@@ -200,9 +199,9 @@ app.put("/accounts/:id", async function(request, response){
     try{
         const newAccount = request.body
         const accountId = request.params.id
-        const connection = await pool.getConnection()
+        
         const query = "UPDATE accounts SET username = ?, password = ? WHERE id = ?"
-        await connection.query(query, [newAccount.username, newAccount.password, accountId])
+        await pool.query(query, [newAccount.username, newAccount.password, accountId])
         response.status(201).end()
     }
     catch(error){
@@ -213,12 +212,12 @@ app.put("/accounts/:id", async function(request, response){
 
 app.delete("/accounts/:id", async function(request, response){
     try{
-        const connection = await pool.getConnection()
+        
         const accountId = request.params.id
         const deleteCommentsQuery = "DELETE FROM comments WHERE accountId = ?"
         const deleteAccountQuery = "DELETE FROM accounts WHERE id = ?"
-        await connection.query(deleteCommentsQuery, [accountId])
-        await connection.query(deleteAccountQuery, [accountId])
+        await pool.query(deleteCommentsQuery, [accountId])
+        await pool.query(deleteAccountQuery, [accountId])
         response.status(200).end()
     }
     catch(error){
@@ -230,9 +229,9 @@ app.delete("/accounts/:id", async function(request, response){
 app.post("/accounts", async function(request, response){
     try{
         const newAccount = request.body
-        const connection = await pool.getConnection()
+        
         const query = "INSERT INTO accounts (username, password) VALUES (?, ?)"
-        await connection.query(query, [newAccount.username, newAccount.password])
+        await pool.query(query, [newAccount.username, newAccount.password])
         response.status(201).end()
     }
     catch(error){

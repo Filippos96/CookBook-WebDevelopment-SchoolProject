@@ -24,14 +24,15 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 
-/*
+
 INSERT INTO accounts (username, password)
 VALUES
 ('John', 'abc123'),
 ('Jane', 'abc123'),
 ('Mark', 'abc123'),
 ('Emily', 'abc123'),
-('Michael', 'abc123')
+('Sara', 'abc123'),
+('Michael', 'abc123');
 
 INSERT INTO recipes (accountId, title, ingredients, directives)
 VALUES
@@ -39,7 +40,8 @@ VALUES
 (2, 'Pizza', 'flour, cheese, tomato sauce', 'mix, top, bake'),
 (3, 'Chocolate Cake', 'flour, sugar, cocoa powder', 'mix, bake, decorate'),
 (4, 'BBQ Ribs', 'ribs, BBQ sauce', 'marinate, grill'),
-(5, 'Vegetable Stir Fry', 'vegetables, soy sauce', 'chop, stir fry');
+(5, 'Vegetable Stir Fry', 'vegetables, soy sauce', 'chop, stir fry'),
+(6, 'Vegetable Stir Fry', 'vegetables, soy sauce', 'chop, stir fry');
 
 INSERT INTO comments (accountId, recipeId, comment)
 VALUES
@@ -60,4 +62,3 @@ VALUES
 (3, 6, 'I made this BBQ sauce for a party and everyone loved it!'),
 (4, 6, 'I used this sauce on ribs and it was delicious!'),
 (5, 6, 'I cant wait to try this on chicken next!');
-*/
