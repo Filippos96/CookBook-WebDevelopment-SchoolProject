@@ -1,3 +1,8 @@
+<script>
+    import {Router, Link, Route} from "svelte-routing"
+</script>
+
+
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="logo">
@@ -16,12 +21,12 @@
     </div>
     <!-- Menu -->
     <div class="menu">
-        <a href="#/sidebar" class="active">
+        <Link to="/recipes">
             <span class="icon">
                 <i class="fa-solid fa-house"></i>
             </span>
             Home
-        </a>
+        </Link>
         <a href="#/preset">
             <span class="icon">
                 <i class="fa-regular fa-image"></i>         

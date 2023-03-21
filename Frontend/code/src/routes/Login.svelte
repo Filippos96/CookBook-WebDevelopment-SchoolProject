@@ -3,38 +3,23 @@
     let username = ""
     let password = ""
 
-    let user = { loggedIn: false };
-
-	function toggle() {
-		user.loggedIn = !user.loggedIn;
-	}
-
 </script>
 <div class="login">
     <h1>Login</h1>
 
-    {#if user.loggedIn}
-    <button on:click={toggle}>
-        Log out
-    </button>
-    {/if}
-    
-    
-    {#if !user.loggedIn}
-    Username:
-    <span><input bind:value={username} placeholder="Enter your name"></span>
-    
-    Password:
-    <input bind:value={password} placeholder="Enter your password">
-    
-    <button on:click={toggle}>
-        Log in
-    </button>
-    {/if}
+    <form>
+        <label for="username">Username: </label>
+        <input type="text" bind:value={username}>
+        <label for="password">Password: </label>
+        <input type="text" bind:value={password}>
+        <input type="submit" value="Log in">
+    </form>
+
 </div>
 
 <style>
     .login {
         margin-left: 250px;
+        color: black;
     }
 </style>
