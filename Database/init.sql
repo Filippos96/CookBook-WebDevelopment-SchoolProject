@@ -24,10 +24,9 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 
-
 INSERT INTO accounts (username, password)
 VALUES
-('John', 'abc123'),
+('John', '$2a$10$W3dxK5G48WCHSQKZu7Hr2OB5d.F06Z7y6jYeRKV.mx0h2TeRJZUbu'),
 ('Jane', 'abc123'),
 ('Mark', 'abc123'),
 ('Emily', 'abc123'),
