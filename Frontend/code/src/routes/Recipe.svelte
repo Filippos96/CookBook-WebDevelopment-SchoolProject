@@ -135,7 +135,6 @@ loadRecipe()
 </script>
 
 <div class="everything">
-
     <h1>Recipe</h1>
     {#if isFetchingRecipe}
         <p>Wait, I'm fetching data...</p>

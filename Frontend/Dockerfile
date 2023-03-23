@@ -10,4 +10,8 @@ RUN npm install
 
 COPY ./code ./
 
+RUN npm run build
+
+EXPOSE 5173
+
 CMD ["npm", "run", "dev"]
