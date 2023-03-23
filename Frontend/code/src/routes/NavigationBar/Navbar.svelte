@@ -21,7 +21,7 @@
     </div>
     <!-- Menu -->
     <div class="menu">
-        <Link to="/recipes">
+        <Link to="/recipes" class="links">
             <span class="icon">
                 <i class="fa-solid fa-house"></i>
             </span>
@@ -133,6 +133,28 @@
         margin-top: 40px;
     }
 
+    :global(a) {
+        width: 100%;
+        font-size: 1rem;
+        color: #000;
+        display: flex;
+        align-items: center;
+        line-height: 60px;
+    }
+
+    :global(a):hover, :global(a) .active{
+        color: #286052;
+    }
+
+    :global(a):hover::before, :global(a) .active::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        width: 2px;
+        height: 17px;
+        background: #286052;
+    }
+
     .menu a {
         width: 100%;
         font-size: 1rem;
@@ -142,7 +164,20 @@
         line-height: 60px;
     }
 
+    a.links {
+        width: 100%;
+        font-size: 1rem;
+        color: #000;
+        display: flex;
+        align-items: center;
+        line-height: 60px;
+    }
+
     .menu a:hover, .menu .active {
+        color: #286052;
+    }
+
+    a.links:hover, a.links .active {
         color: #286052;
     }
 

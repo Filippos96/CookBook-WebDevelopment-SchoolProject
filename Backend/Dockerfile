@@ -10,7 +10,7 @@ WORKDIR  /backend
 
 COPY ./package*.json ./
 
-RUN npm install
+RUN npm install && npm install bcrypt && npm install jsonwebtoken
 
 COPY ./src ./
 

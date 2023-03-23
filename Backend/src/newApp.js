@@ -9,6 +9,11 @@ const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 app.use(express.json())
 app.use(express.urlencoded())
+const bcrypt = require('bcrypt');
+const hashSalt = 10
+const jwt = require('jsonwebtoken')
+
+const ACCESS_TOKEN_SECRET = "alkfnalknfkalaas"
 
 
 const pool = createPool({
@@ -126,16 +131,33 @@ app.post("/recipes/:id/comments", async function(request, response){
 
 app.post("/recipes", async function(request, response){
     try{
-        const newRecipe = request.body
-        const accountId = 1 //this line needs editing
-        console.log("Post req")
-        console.log(newRecipe.title)
-        console.log(newRecipe.ingredients)
-        console.log(newRecipe.directives)
+
+        const authorizationHeaderValue = request.get("Authorization")
+        const accesToken = authorizationHeaderValue.substring(7)
+
+        jwt.verify(accesToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+            if(error) {
+                response.status(400)
+            } else {
+
+               
+                const newRecipe = request.body
+                const accountId = payload.sub
+
+                console.log("payload.sub")
+                console.log(payload.sub)
+                console.log("Post req")
+                console.log(newRecipe.title)
+                console.log(newRecipe.ingredients)
+                console.log(newRecipe.directives)
+                
+                const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
+                await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
+                response.status(201).end()
+            }
+        })
+
         
-        const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
-        await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
-        response.status(201).end()
     }
     catch(error){
         console.log(error);
@@ -174,24 +196,168 @@ app.put("/recipes/:id", async function(request, response){
     }
 })
 
-app.post("/tokens", function(request, response){
+app.post("/accounts", async function(request, response){
+    try{
+        const newAccount = request.body
 
+        const checkQuery = "SELECT * FROM accounts WHERE username = ?"
+        const [existingAccount] = await pool.query(checkQuery, [newAccount.username])
+
+        if (existingAccount) {
+            response.status(409).end()
+        } else {
+            bcrypt.hash(newAccount.password, hashSalt, async function(error, hashedPassword){
+            if (error){
+                console.log("There was an error hashing.")
+                response.status(500).end()
+            } else {
+                const query = "INSERT INTO accounts (username, password) VALUES (?, ?)"
+                await pool.query(query, [newAccount.username, hashedPassword])
+                response.status(201).end()
+            }
+        })  
+        }
+        
+    }
+    catch(error){
+        console.log(error);
+        response.status(500).end()
+    }
+})
+
+app.post("/tokens", async function(request, response){
+    console.log("We are in tokens")
     const grantType = request.body.grant_type
     const username = request.body.username
     const password = request.body.password
 
     if(grantType != "password"){
+        console.log("Not a password")
         response.status(400).json({error: "unsupported_grant_type"})
         return
     }
 
-    if(username == "abc" && password == "abc123"){
-
-
+    if(username.length === 0 || password.length === 0){
+        console.log("no characters")
+        response.status(400).json({error: "invalid_request"})
+        return
     }
 
+    try {
+        console.log("Going in try")
+        const query = "SELECT * FROM accounts WHERE username = ?"
+        const [account] = await pool.query(query, [username])
+        console.log(account)
+        
+        if (!account) {
+            response.status(400).json({error: "invalid_grant"})
+            return
+        }
+
+        bcrypt.compare(password, account.password, function(err, result) {
+            if (err) {
+                console.log("There was an error comparing passwords.")
+                response.status(500).end()
+            } else if (result) {
+                console.log("Passwords match")
+                const payload = {
+                    sub: account.id
+                }
+
+                jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, accessToken){
+                    if(error) {
+                        response.status(500).end()
+                    } else {
+                        console.log("200")
+                        response.status(200).json({
+                            access_token: accessToken,
+                            type: "bearer",
+                        })
+                    }
+                })
+            } else {
+                console.log("Passwords do not match")
+                response.status(400).json({error: "invalid_grant"})
+            }
+        })
+        
+    } catch(error) {
+        console.log(error);
+        response.status(500).end()
+    }
 })
 
+
+/*
+app.post("/tokens", async function(request, response){
+
+    console.log("We are in tokens")
+    const grantType = request.body.grant_type
+    const username = request.body.username
+    const password = request.body.password
+
+    if(grantType != "password"){
+        console.log("Not a password")
+        response.status(400).json({error: "unsupported_grant_type"})
+        return
+    }
+
+    if(username.length === 0 || password.length === 0){
+        console.log("no characters")
+        response.status(400).json({error: "invalid_request"})
+        return
+    }
+
+// FELSÖK EFTER DEN HÄR PUNKTEN
+
+    try {
+        console.log("Going in try")
+        bcrypt.hash(password, hashSalt, async function(error, hashedPassword){
+            if (error){
+                console.log("There was an error hashing.")
+                response.status(500).end()
+            } else {
+                console.log("Not error")
+                const query = "SELECT * FROM accounts WHERE username = ?"
+                const [account] = await pool.query(query, [username])
+                console.log(account)
+                
+                console.log(username)
+                console.log(account.username)
+                console.log(hashedPassword)
+                console.log(account.password) 
+                if(username == account.username && hashedPassword == account.password){
+                    console.log("DU ÄR INLOGGAD")
+                    const payload = {
+                        sub: account.id
+                    }
+
+                    jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, accessToken){
+                        if(error) {
+                            response.status(500).end()
+                        } else {
+                            response.status(200).end().json({
+                                access_token: accessToken,
+                                type: "beared",
+                            })
+                        }
+                    })
+                } else {
+                    response.status(400).json({error: "invalid_grant"})
+                }
+            }
+        })
+        
+    } catch(error) {
+        console.log(error);
+        response.status(500).end()
+    }
+    
+
+    
+
+})
+*/
 /*
 app.get("/recipes", async function(request, response){
 
@@ -403,7 +569,7 @@ app.delete("/accounts/:id", async function(request, response){
         response.status(500).end()
     }
 })
-
+/*
 app.post("/accounts", async function(request, response){
     try{
         const newAccount = request.body
@@ -417,5 +583,5 @@ app.post("/accounts", async function(request, response){
         response.status(500).end()
     }
 })
-
+*/
 app.listen(8080)

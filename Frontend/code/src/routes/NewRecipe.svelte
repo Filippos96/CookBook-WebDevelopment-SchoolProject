@@ -1,5 +1,7 @@
 <script>
 
+    import { user } from "../user-store";
+
     let title = ""
     let ingredients = ""
     let directives = ""
@@ -18,7 +20,8 @@
             const response = await fetch("http://localhost:8080/recipes", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": "Bearer "+$user.accessToken
             },
             body: JSON.stringify(recipe),
             })

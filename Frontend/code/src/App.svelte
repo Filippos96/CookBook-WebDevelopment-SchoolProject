@@ -13,6 +13,10 @@
   import Comments from "./routes/RecipeComments.svelte"
   import NewRecipe from "./routes/NewRecipe.svelte";
   import UpdateRecipe from "./routes/UpdateRecipe.svelte";
+  import NewAccount from "./routes/NewAccount.svelte";
+
+  import { user } from "./user-store";
+  import Test from "./routes/test.svelte";
   
 </script>
 
@@ -27,9 +31,15 @@
     <Route path="/newRecipe" component={NewRecipe} />
     <Route path="/recipes/:id/update" component={UpdateRecipe} />
     <Route path="/login" component={Login} />
+    <Route path="/createAccount" component={NewAccount} />
+    <Route path="/test" component={Test} />
 
     <div>
-      <Link to="/newRecipe">Create new recipe</Link>
+      {#if $user.isLoggedIn}
+        <Link to="/newRecipe">Create new recipe</Link>
+      {:else}
+        <Link to="/login">Log in</Link>
+      {/if}
     </div>
     
 
