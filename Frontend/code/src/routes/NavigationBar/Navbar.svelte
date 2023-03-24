@@ -6,7 +6,7 @@
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="logo">
-        <a href="/">CockBock</a>
+        <a href="/">CookBook</a>
     </div>
     <!-- Profile Image -->
     <div class="profile">

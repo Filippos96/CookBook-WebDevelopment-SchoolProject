@@ -9,7 +9,7 @@
   import Posts from "./routes/Posts.svelte";
   import Preset from './routes/Preset.svelte';
   import Recipe from "./routes/Recipe.svelte";
-  import Recipes from "./routes/TestRecipe.svelte";
+  import Recipes from "./routes/Recipes.svelte";
   import Comments from "./routes/RecipeComments.svelte"
   import NewRecipe from "./routes/NewRecipe.svelte";
   import UpdateRecipe from "./routes/UpdateRecipe.svelte";
