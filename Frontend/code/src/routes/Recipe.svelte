@@ -148,7 +148,7 @@ loadRecipe()
             <div id="card-container">
                 <div id="card-title">{recipe.title}</div>
                     <div id="recipe-image"></div>
-                <div id="details">Prep time: <span class="detail-value">10 minutes</span> | Cook time: <span class="detail-value">55 minutes</span> | Yield: <span class="detail-value">Makes some food</span></div>
+                <div id="details">Prep time: <span class="detail-value">10 minutes</span> | Cook time: <span class="detail-value">55 minutes</span> | Yield: <span class="detail-value">Make some food</span></div>
                 <div id="card-items">
                     <span class="card-item-title">Ingredients</span>
                     <ul class="checkmark">
@@ -187,7 +187,7 @@ loadRecipe()
                     <form on:submit|preventDefault={createComment}>
                         <label for="comment">New comment: </label>
                         <textarea id="comment" name="comment" rows="4" cols="50" bind:value={comment}></textarea>
-                        <input type="submit" value="Create Comment">
+                        <button type="submit" value="Create Comment" class="createButton">Create Comment</button>
                     </form>
                 {/if}
             
@@ -205,7 +205,7 @@ loadRecipe()
                 {/if}
                 {/if}
                 <div class="buttons">
-                    {#if $user.isLoggedIn}
+                    {#if $user.accountID == recipe.accountId}
                         <Link to="/recipes/{recipe.id}/update">Update Recipe</Link>
                         <button on:click={deleteRecipe}>Delete Recipe</button>
                     {/if}
@@ -239,6 +239,12 @@ loadRecipe()
 
 body {
   background: #f9f9f9;
+}
+
+.createButton {
+    background: #4f46e5;
+    color:white;
+    padding: 10px;
 }
 
 .test {

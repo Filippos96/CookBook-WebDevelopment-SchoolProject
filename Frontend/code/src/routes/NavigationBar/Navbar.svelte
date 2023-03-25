@@ -1,5 +1,6 @@
 <script>
     import {Router, Link, Route} from "svelte-routing"
+    import { user } from "../../user-store";
 </script>
 
 
@@ -14,10 +15,14 @@
             <img src="../public/donut.jpg" alt="">
         </div>
         <div class="name">
-            <h1>Kraz KraZ</h1>
+            {#if $user.isLoggedIn}
+                <h1>{$user.username}</h1>
+            {:else}
+                <h1>Not logged in</h1>
+            {/if}
             <img src="../public/donut.jpg" alt="">
         </div>
-        <span>@kraz</span>
+        <span>@Jenssss</span>
     </div>
     <!-- Menu -->
     <div class="menu">
@@ -27,30 +32,41 @@
             </span>
             Home
         </Link>
-        <a href="#/preset">
+        {#if $user.isLoggedIn}
+        <Link to="/newRecipe" class="links">
             <span class="icon">
                 <i class="fa-regular fa-image"></i>         
             </span>
-            Preset
-        </a>
-        <a href="#/test">
+            New Recipe
+        </Link>
+        {/if}
+        <Link to="/about">
             <span class="icon">
                 <i class="fa-regular fa-circle-question"></i>
             </span>
             About
-        </a>
-        <a href="#/">
-            <span class="icon">
-                <i class="fa-regular fa-user"></i>
-            </span>
-            Profile
-        </a>
-        <a href="#/">
+        </Link>
+        {#if $user.isLoggedIn}
+            <Link to="/logout" class="links">
+                <span class="icon">
+                    <i class="fa-regular fa-user"></i>
+                </span>
+                Logout
+            </Link>
+        {:else}
+            <Link to="/login" class="links">
+                <span class="icon">
+                    <i class="fa-regular fa-user"></i>
+                </span>
+                Login
+            </Link>
+        {/if}
+        <Link to="/settings" class="links">
             <span class="icon">
                 <i class="fa-solid fa-gear"></i>
             </span>
             Settings
-        </a>
+        </Link>
     </div>
 </div>
 

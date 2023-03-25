@@ -4,6 +4,35 @@
 
     const fetchRecipesPromise = fetch("http://localhost:8080/recipes")
 
+    let errorCodes = []
+
+
+async function loadUser(userId) {
+
+    try {
+        const response = await fetch("http://localhost:8080/recipes/"+userId+"/user")
+
+        switch(response.status){
+
+            case 200:
+                const user = await response.json()
+                console.log("USERNAME")
+                console.log(user.username)
+                return user.username
+            break;
+
+            case 400:
+                errorCodes = await response.json()
+            break;
+
+        }
+
+    } catch(errror) {
+        errorCodes.push("COMMUNICATION_ERROR")
+    }
+}
+
+
 </script>
 
 <div class="recipes">
@@ -35,7 +64,12 @@
                         <div class="user">
                             <img src="https://source.unsplash.com/600x400/?food" alt="user__image" class="user__image">
                             <div class="user__info">
-                            <h5>{recipe.id}</h5>
+                            <h5>{#await loadUser(recipe.id)}
+                                    Unknown
+                                {:then username}
+                                    {username}
+                                {/await}
+                            </h5>
                             </div>
                         </div>
                         </div>

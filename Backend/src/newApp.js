@@ -62,28 +62,6 @@ app.get("/recipes/:id", async function(request, response){
             const query = "SELECT * FROM recipes WHERE id = ?"
             const recipe = await pool.query(query, [recipeId])   
             if(recipe){ 
-                console.log(recipe)
-                console.log("There is!")  
-                response.status(200).json(recipe) // send the retrieved data back in the response
-            } else {
-                console.log("There is not!")
-                response.status(404).end()
-            }
-        } catch(error) {
-            console.log(error)
-            response.status(500).end()
-        }
-    }, 1000)
-})
-/*
-app.get("/recipes/:id", async function(request, response){
-    setTimeout(async function(){
-        try {
-            const recipeId = request.params.id // retrieve the recipe ID from the request parameters
-            const query = "SELECT * FROM recipes WHERE id = ?"
-            const recipe = await pool.query(query, [recipeId])
-            if(recipe){
-                console.log(recipe)
                 response.status(200).json(recipe) // send the retrieved data back in the response
             } else {
                 response.status(404).end()
@@ -94,7 +72,19 @@ app.get("/recipes/:id", async function(request, response){
         }
     }, 1000)
 })
-*/
+
+app.get("/recipes/:id/user", async function(request, response){
+    try {
+        const userId = request.params.id
+        const query = "SELECT username FROM accounts WHERE id = ?"
+        const [username] = await pool.query(query, [userId])
+        response.status(200).json(username)
+    } catch (error){
+        console.log(error)
+        response.status(500).end()
+    }
+})
+
 app.get("/recipes/:id/comments", async function(request, response){
     console.log("get request")
     try{
@@ -139,25 +129,13 @@ app.post("/recipes", async function(request, response){
             if(error) {
                 response.status(400)
             } else {
-
-               
                 const newRecipe = request.body
                 const accountId = payload.sub
-
-                console.log("payload.sub")
-                console.log(payload.sub)
-                console.log("Post req")
-                console.log(newRecipe.title)
-                console.log(newRecipe.ingredients)
-                console.log(newRecipe.directives)
-                
                 const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
                 await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
                 response.status(201).end()
             }
         })
-
-        
     }
     catch(error){
         console.log(error);
@@ -199,6 +177,29 @@ app.put("/recipes/:id", async function(request, response){
 app.post("/accounts", async function(request, response){
     try{
         const newAccount = request.body
+        var errorCodes = []
+
+        if(newAccount.username.length < 4){
+            console.log("no characters")
+            errorCodes.push("Username too short")
+        }
+        if(newAccount.username.length > 14){
+            console.log("no characters")
+            errorCodes.push("Username too long")
+        }
+        if(newAccount.password.length < 6){
+            console.log("no characters")
+            errorCodes.push("Password too short")
+        }
+        if(newAccount.password.length > 14){
+            console.log("no characters")
+            errorCodes.push("Password too short")
+        }
+        
+        if (errorCodes) {
+            response.status(400).json(errorCodes)
+            return
+        }
 
         const checkQuery = "SELECT * FROM accounts WHERE username = ?"
         const [existingAccount] = await pool.query(checkQuery, [newAccount.username])
@@ -264,17 +265,25 @@ app.post("/tokens", async function(request, response){
                     sub: account.id
                 }
 
-                jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, accessToken){
-                    if(error) {
+                jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, IDToken){
+                    if (error) {
                         response.status(500).end()
                     } else {
-                        console.log("200")
-                        response.status(200).json({
-                            access_token: accessToken,
-                            type: "bearer",
+                        jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, accessToken){
+                            if(error) {
+                                response.status(500).end()
+                            } else {
+                                console.log("200")
+                                response.status(200).json({
+                                    access_token: accessToken,
+                                    id_token: IDToken,
+                                    type: "bearer",
+                                })
+                            }
                         })
                     }
                 })
+
             } else {
                 console.log("Passwords do not match")
                 response.status(400).json({error: "invalid_grant"})
