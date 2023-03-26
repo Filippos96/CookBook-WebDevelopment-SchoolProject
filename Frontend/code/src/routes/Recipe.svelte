@@ -40,6 +40,10 @@
         try {
             const response = await fetch("http://localhost:8080/recipes/"+id, {
                 method: 'DELETE',
+                headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer "+$user.accessToken
+                }
             });
             
             switch(response.status) {
@@ -162,26 +166,22 @@
     let hasDeletedCommentCorrectly = false
     let failedToDeleteComments = false
 
-    async function deleteComment(commentId) {
+    async function deleteComment(comment) {
 
-
-        const commentID = {
-            commentId
-        }
 
         try {
-            const response = await fetch("http://localhost:8080/recipes/"+id+"/"+commentId, {
+            const response = await fetch("http://localhost:8080/recipes/"+id+"/"+comment.id, {
                 method: 'DELETE',
                 headers: {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer "+$user.accessToken
-                },
-                body: JSON.stringify(commentID),
+                }
             });
             
             switch(response.status) {
 
                 case 200:
+                    await loadRecipeComments()
                     hasDeletedCommentCorrectly = true
                 break;
 
@@ -248,7 +248,7 @@
                         <ul class="checkmark">
                             <li>{comment.comment}</li>
                             {#if $user.accountID == comment.accountId}
-                                <button on:click={() => deleteComment(comment.id)}>Delete Comment</button>
+                                <button on:click={() => deleteComment(comment)}>Delete Comment</button>
                             {/if}
                         </ul>
                     </div>

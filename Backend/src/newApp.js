@@ -34,10 +34,10 @@ pool.on('error',function(error){
 
 app.use(function(request, response, next){
     
-    response.set("Access-Control-Allow-Origin", "*")
-    response.set("Access-Control-Allow-Methods", "*")
-    response.set("Access-Control-Allow-Headers", "*")
-    response.set("Access-Control-Expose-Headers", "*")
+    response.set("access-Control-Allow-Origin", "*")
+    response.set("access-Control-Allow-Methods", "*")
+    response.set("access-Control-Allow-Headers", "*")
+    response.set("access-Control-Expose-Headers", "*")
 
     next()
 
@@ -80,7 +80,8 @@ app.get("/recipes/:id/user", async function(request, response){
         const userId = request.params.id
         const query = "SELECT username FROM accounts WHERE id = ?"
         const [username] = await pool.query(query, [userId])
-        response.status(200).json(username)
+
+        response.status(200).json(username.username)
     } catch (error){
         console.log(error)
         response.status(500).end()
@@ -108,19 +109,29 @@ app.delete("/recipes/:id/:commentId", async function(request, response){
     try{
 
         const authorizationHeaderValue = request.get("Authorization")
-        const accesToken = authorizationHeaderValue.substring(7)
-        console.log(accesToken)
+        const accessToken = authorizationHeaderValue.substring(7)
+        console.log(accessToken)
 
-        jwt.verify(accesToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async function(error, payload){
             if(error) {
                 response.status(400)
             } else {
-                console.log("test")
-                const comment = request.body
-             //   const commentId = payload.commentId
-                const query = "DELETE FROM comments WHERE id = ?"
-                await pool.query(query, [comment.commentId])
-                response.status(201).end()
+
+                const commentId = request.params.commentId
+                const userQuery = "SELECT accountId FROM comments WHERE id = ?"
+                const [user] = await pool.query(userQuery, [commentId])
+
+                console.log(user.accountId)
+                console.log(payload.sub)
+                if(payload.sub === user.accountId){
+                    console.log("Deleting")
+                    const query = "DELETE FROM comments WHERE id = ?"
+                    await pool.query(query, [commentId])
+                    response.status(200).end()
+                } else {
+                    console.log(error);
+                    response.status(500).end()
+                }
             }
         })
     }
@@ -130,14 +141,49 @@ app.delete("/recipes/:id/:commentId", async function(request, response){
     }
 })
 
+app.post("/recipes/:id/comments", async function(request, response){
+    try{
+
+        const authorizationHeaderValue = request.get("Authorization")
+        const accessToken = authorizationHeaderValue.substring(7)
+
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+            if(error) {
+                response.status(400)
+            } else {
+                const newComment = request.body
+                const recipeId = request.params.id
+                const accountId = payload.sub
+                const query = "INSERT INTO comments (accountId, recipeId, comment) VALUES (?, ?, ?)"
+                await pool.query(query, [accountId, recipeId, newComment.comment])
+                response.status(201).end()
+            }
+        })
+    }
+    catch(error){
+        console.log(error);
+    }
+})
 
 app.delete("/comments/:id", async function(request, response){
     try{
-        
-        const commentId = request.params.id
-        const query = "DELETE FROM comments WHERE id = ?"
-        await pool.query(query, [commentId])
-        response.status(200).end()
+
+        const authorizationHeaderValue = request.get("Authorization")
+        const accessToken = authorizationHeaderValue.substring(7)
+
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+            if(error) {
+                response.status(400)
+            } else {
+                const recipeId = request.params.id
+                const commentId = request.params.commentId
+                console.log(recipeId)
+                console.log(commentId)
+                const query = "DELETE FROM comments WHERE id = ?"
+                await pool.query(query, [commentId])
+                response.status(200).end()
+            }
+        })
     }
     catch(error){
         console.log(error)
@@ -149,13 +195,18 @@ app.post("/recipes", async function(request, response){
     try{
 
         const authorizationHeaderValue = request.get("Authorization")
-        const accesToken = authorizationHeaderValue.substring(7)
+        const accessToken = authorizationHeaderValue.substring(7)
 
-        jwt.verify(accesToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async function(error, payload){
             if(error) {
                 response.status(400)
             } else {
+                
                 const newRecipe = request.body
+                console.log(payload.sub)
+                console.log(newRecipe.title)
+                console.log(newRecipe.ingredients)
+                console.log(newRecipe.directives)
                 const accountId = payload.sub
                 const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
                 await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
@@ -171,13 +222,34 @@ app.post("/recipes", async function(request, response){
 
 app.delete("/recipes/:id", async function(request, response){
     try{
-        
-        const recipeId = request.params.id
-        const deleteRecipeQuery = "DELETE FROM recipes WHERE id = ?"
-        const deleteCommentsQuery = "DELETE FROM comments WHERE recipeId = ?"
-        await pool.query(deleteCommentsQuery, [recipeId])
-        await pool.query(deleteRecipeQuery, [recipeId])
-        response.status(200).end()
+
+        const authorizationHeaderValue = request.get("Authorization")
+        const accessToken = authorizationHeaderValue.substring(7)
+        console.log(accessToken)
+
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+            if(error) {
+                response.status(400)
+            } else {
+                const recipeId = request.params.id
+                const userQuery = "SELECT accountId FROM recipes WHERE id = ?"
+                const [user] = await pool.query(userQuery, [recipeId])
+
+                console.log(user)
+                console.log(user.accountId)
+                console.log(payload.sub)
+
+                if(payload.sub === user.accountId){
+                    console.log("Deleting")
+                    const query = "DELETE FROM recipes WHERE id = ?"
+                    await pool.query(query, [recipeId])
+                    response.status(200).end()
+                } else {
+                    console.log(error);
+                    response.status(500).end()
+                }
+            }
+        })
     }
     catch(error){
         console.log(error)
@@ -368,7 +440,7 @@ app.post("/tokens", async function(request, response){
                         sub: account.id
                     }
 
-                    jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, accessToken){
+                    jwt.sign(payload, access_TOKEN_SECRET, function(error, accessToken){
                         if(error) {
                             response.status(500).end()
                         } else {
