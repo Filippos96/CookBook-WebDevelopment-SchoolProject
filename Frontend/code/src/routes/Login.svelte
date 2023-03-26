@@ -69,11 +69,7 @@
             errorCodes.push("COMMUNICATION_ERROR")
         }
     }
-
-    function logThings() {
-      console.log("TEST")
-    }
-
+    
 </script>
 <div class="container">
     
@@ -142,13 +138,13 @@
     {/if}
 
     <div class="errorCodes">
-        {#if failedToLogin}
-            {logThings()}
-            You have errors:
-            {#each errorCodes as errorCode}
-                {errorCode}
-            {/each}
-        {/if}
+      {#if failedToLogin}
+      <ul>
+          {#each errorCodes as errorCode}
+              <li>{errorCode}</li>
+          {/each}
+      </ul>
+      {/if}
     </div>
    
 

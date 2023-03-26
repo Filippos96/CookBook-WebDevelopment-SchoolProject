@@ -60,7 +60,7 @@
     
     }
 
-loadRecipe()
+    loadRecipe()
 
     let isFetchingComments = true
     let failedToFetchComments = false
@@ -90,6 +90,31 @@ loadRecipe()
 
     }
 
+    async function loadUser(userId) {
+
+        try {
+            const response = await fetch("http://localhost:8080/recipes/"+userId+"/user")
+
+            switch(response.status){
+
+                case 200:
+                    const user = await response.json()
+                    console.log("USERNAME")
+                    console.log(user.username)
+                    return user.username
+                break;
+
+                case 400:
+                    errorCodes = await response.json()
+                break;
+
+            }
+
+        } catch(errror) {
+            errorCodes.push("COMMUNICATION_ERROR")
+        }
+    }
+
     var showComments = false
     function toggleCommentSection() {
         showComments = !showComments
@@ -101,17 +126,18 @@ loadRecipe()
 
     async function createComment() {
 
-        const recipe = {
+        const theComment = {
             comment
-        }
+        } 
 
         try {
             const response = await fetch("http://localhost:8080/recipes/"+id+"/comments", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Authorization": "Bearer "+$user.accessToken
             },
-            body: JSON.stringify(recipe),
+            body: JSON.stringify(theComment),
             })
 
             switch(response.status){
@@ -131,6 +157,45 @@ loadRecipe()
         } catch(errror) {
             errorCodes.push("COMMUNICATION_ERROR")
         }
+    }
+
+    let hasDeletedCommentCorrectly = false
+    let failedToDeleteComments = false
+
+    async function deleteComment(commentId) {
+
+
+        const commentID = {
+            commentId
+        }
+
+        try {
+            const response = await fetch("http://localhost:8080/recipes/"+id+"/"+commentId, {
+                method: 'DELETE',
+                headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer "+$user.accessToken
+                },
+                body: JSON.stringify(commentID),
+            });
+            
+            switch(response.status) {
+
+                case 200:
+                    hasDeletedCommentCorrectly = true
+                break;
+
+                case 404:
+                    errorCodes = await response.json()
+                    failedToDeleteComments = true
+                break;
+
+            }
+
+        } catch (error) {
+            // Handle network error
+        }
+
     }
 
 </script>
@@ -174,14 +239,28 @@ loadRecipe()
                     <div class="user">
                         <div class="user-profile">
                             <img src="https://source.unsplash.com/600x400/?food" alt="user__image" class="user__image">
-                            {comment.accountId}
+                                {#await loadUser(comment.accountId)}
+                                    Unknown
+                                {:then username}
+                                    {username}
+                                {/await}
                         </div>
                         <ul class="checkmark">
                             <li>{comment.comment}</li>
+                            {#if $user.accountID == comment.accountId}
+                                <button on:click={() => deleteComment(comment.id)}>Delete Comment</button>
+                            {/if}
                         </ul>
                     </div>
                     
                 {/each}
+                {#if failedToDeleteComments}
+                    <ul>
+                        {#each errorCodes as errorCode}
+                            <li>{errorCode}</li>
+                        {/each}
+                    </ul>
+                {/if}
                 </div>
                 {#if $user.isLoggedIn}
                     <form on:submit|preventDefault={createComment}>

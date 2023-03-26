@@ -15,6 +15,8 @@ const jwt = require('jsonwebtoken')
 
 const ACCESS_TOKEN_SECRET = "alkfnalknfkalaas"
 
+const ID_TOKEN_SECRET = "aljfnafnlanflanf"
+
 
 const pool = createPool({
     host: "db",
@@ -102,19 +104,43 @@ app.get("/recipes/:id/comments", async function(request, response){
 })
 
 //need to edit this to get the userId
-app.post("/recipes/:id/comments", async function(request, response){
+app.delete("/recipes/:id/:commentId", async function(request, response){
     try{
-        const newComment = request.body
-        const accountId = 1 //this line needs editing
-        const recipeId = request.params.id
-        console.log(newComment.comment)
-        
-        const query = "INSERT INTO comments (accountId, recipeId, comment) VALUES (?, ?, ?)"
-        await pool.query(query, [accountId, recipeId, newComment.comment])
-        response.status(201).end()
+
+        const authorizationHeaderValue = request.get("Authorization")
+        const accesToken = authorizationHeaderValue.substring(7)
+        console.log(accesToken)
+
+        jwt.verify(accesToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+            if(error) {
+                response.status(400)
+            } else {
+                console.log("test")
+                const comment = request.body
+             //   const commentId = payload.commentId
+                const query = "DELETE FROM comments WHERE id = ?"
+                await pool.query(query, [comment.commentId])
+                response.status(201).end()
+            }
+        })
     }
     catch(error){
         console.log(error);
+        response.status(500).end()
+    }
+})
+
+
+app.delete("/comments/:id", async function(request, response){
+    try{
+        
+        const commentId = request.params.id
+        const query = "DELETE FROM comments WHERE id = ?"
+        await pool.query(query, [commentId])
+        response.status(200).end()
+    }
+    catch(error){
+        console.log(error)
         response.status(500).end()
     }
 })
@@ -193,7 +219,7 @@ app.post("/accounts", async function(request, response){
         }
         if(newAccount.password.length > 14){
             console.log("no characters")
-            errorCodes.push("Password too short")
+            errorCodes.push("Password too long")
         }
         
         if (errorCodes) {
@@ -251,6 +277,7 @@ app.post("/tokens", async function(request, response){
         console.log(account)
         
         if (!account) {
+            console.log("Invalid account")
             response.status(400).json({error: "invalid_grant"})
             return
         }
@@ -265,7 +292,7 @@ app.post("/tokens", async function(request, response){
                     sub: account.id
                 }
 
-                jwt.sign(payload, ACCESS_TOKEN_SECRET, function(error, IDToken){
+                jwt.sign(payload, ID_TOKEN_SECRET, function(error, IDToken){
                     if (error) {
                         response.status(500).end()
                     } else {
@@ -507,7 +534,7 @@ app.put("/comments/:id", async function(request, response){
         response.status(500).end()
     }
 })
-
+/*
 app.delete("/comments/:id", async function(request, response){
     try{
         
@@ -520,7 +547,7 @@ app.delete("/comments/:id", async function(request, response){
         console.log(error)
         response.status(500).end()
     }
-})
+}) */
 
 app.get("/accounts", async function(request, response){
     try {
