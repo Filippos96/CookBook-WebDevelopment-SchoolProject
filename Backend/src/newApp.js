@@ -1,6 +1,3 @@
-//import express from 'express'
-//import {createPool} from 'mariadb'
-console.log("Hello")
 const express = require("express")
 const { createPool } = require('mariadb');
 const app = express()
@@ -78,10 +75,12 @@ app.get("/recipes/:id", async function(request, response){
 app.get("/recipes/:id/user", async function(request, response){
     try {
         const userId = request.params.id
+        console.log(userId)
         const query = "SELECT username FROM accounts WHERE id = ?"
         const [username] = await pool.query(query, [userId])
-
-        response.status(200).json(username.username)
+        console.log(username)
+        console.log(username.username)
+        response.status(200).json(username)
     } catch (error){
         console.log(error)
         response.status(500).end()
@@ -177,8 +176,6 @@ app.delete("/comments/:id", async function(request, response){
             } else {
                 const recipeId = request.params.id
                 const commentId = request.params.commentId
-                console.log(recipeId)
-                console.log(commentId)
                 const query = "DELETE FROM comments WHERE id = ?"
                 await pool.query(query, [commentId])
                 response.status(200).end()
@@ -203,10 +200,6 @@ app.post("/recipes", async function(request, response){
             } else {
                 
                 const newRecipe = request.body
-                console.log(payload.sub)
-                console.log(newRecipe.title)
-                console.log(newRecipe.ingredients)
-                console.log(newRecipe.directives)
                 const accountId = payload.sub
                 const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
                 await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
@@ -235,10 +228,6 @@ app.delete("/recipes/:id", async function(request, response){
                 const userQuery = "SELECT accountId FROM recipes WHERE id = ?"
                 const [user] = await pool.query(userQuery, [recipeId])
 
-                console.log(user)
-                console.log(user.accountId)
-                console.log(payload.sub)
-
                 if(payload.sub === user.accountId){
                     console.log("Deleting")
                     const query = "DELETE FROM recipes WHERE id = ?"
@@ -259,12 +248,31 @@ app.delete("/recipes/:id", async function(request, response){
 
 app.put("/recipes/:id", async function(request, response){
     try{
-        const newRecipe = request.body
+
+        const authorizationHeaderValue = request.get("Authorization")
+        const accessToken = authorizationHeaderValue.substring(7)
         
-        const recipeId = request.params.id
-        const query = "UPDATE recipes SET title = ?, ingredients = ?, directives = ? WHERE id = ?"
-        await pool.query(query , [newRecipe.title, newRecipe.ingredients, newRecipe.directives, recipeId])
-        response.status(200).end()
+
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async function(error, payload){
+            if(error) {
+                response.status(400)
+            } else {
+                const recipeId = request.params.id
+                const userQuery = "SELECT accountId FROM recipes WHERE id = ?"
+                const [user] = await pool.query(userQuery, [recipeId])
+
+                if(payload.sub === user.accountId){
+                    console.log("Updating")
+                    const newRecipe = request.body
+                    const query = "UPDATE recipes SET title = ?, ingredients = ?, directives = ? WHERE id = ?"
+                    await pool.query(query , [newRecipe.title, newRecipe.ingredients, newRecipe.directives, recipeId])
+                    response.status(200).end()
+                } else {
+                    console.log(error);
+                    response.status(500).end()
+                }
+            }
+        })
     }
     catch(error){
         console.log(error);
@@ -294,7 +302,7 @@ app.post("/accounts", async function(request, response){
             errorCodes.push("Password too long")
         }
         
-        if (errorCodes) {
+        if (errorCodes.length > 0) {
             response.status(400).json(errorCodes)
             return
         }
@@ -310,6 +318,7 @@ app.post("/accounts", async function(request, response){
                 console.log("There was an error hashing.")
                 response.status(500).end()
             } else {
+                console.log("INSERT")
                 const query = "INSERT INTO accounts (username, password) VALUES (?, ?)"
                 await pool.query(query, [newAccount.username, hashedPassword])
                 response.status(201).end()
@@ -395,203 +404,18 @@ app.post("/tokens", async function(request, response){
     }
 })
 
-
-/*
-app.post("/tokens", async function(request, response){
-
-    console.log("We are in tokens")
-    const grantType = request.body.grant_type
-    const username = request.body.username
-    const password = request.body.password
-
-    if(grantType != "password"){
-        console.log("Not a password")
-        response.status(400).json({error: "unsupported_grant_type"})
-        return
-    }
-
-    if(username.length === 0 || password.length === 0){
-        console.log("no characters")
-        response.status(400).json({error: "invalid_request"})
-        return
-    }
-
-// FELSÖK EFTER DEN HÄR PUNKTEN
-
-    try {
-        console.log("Going in try")
-        bcrypt.hash(password, hashSalt, async function(error, hashedPassword){
-            if (error){
-                console.log("There was an error hashing.")
-                response.status(500).end()
-            } else {
-                console.log("Not error")
-                const query = "SELECT * FROM accounts WHERE username = ?"
-                const [account] = await pool.query(query, [username])
-                console.log(account)
-                
-                console.log(username)
-                console.log(account.username)
-                console.log(hashedPassword)
-                console.log(account.password) 
-                if(username == account.username && hashedPassword == account.password){
-                    console.log("DU ÄR INLOGGAD")
-                    const payload = {
-                        sub: account.id
-                    }
-
-                    jwt.sign(payload, access_TOKEN_SECRET, function(error, accessToken){
-                        if(error) {
-                            response.status(500).end()
-                        } else {
-                            response.status(200).end().json({
-                                access_token: accessToken,
-                                type: "beared",
-                            })
-                        }
-                    })
-                } else {
-                    response.status(400).json({error: "invalid_grant"})
-                }
-            }
-        })
-        
-    } catch(error) {
-        console.log(error);
-        response.status(500).end()
-    }
-    
-
-    
-
-})
-*/
-/*
-app.get("/recipes", async function(request, response){
-
-    //if we want to test new code we could restart everything or we can make use of volumes
-    //the following code in the dockerfile makes it so the app is restarted when changed
-
-    //#watch listens to changes in the code, making it restart the aplication
-    //CMD node --watch ./src/app.js
-    try {
-        const query = "SELECT * FROM recipes ORDER BY title"
-        const recipes = await pool.query(query)
-        response.status(200).json(recipes) // send the retrieved data back in the response
-    } catch(error) {
-        console.log(error)
-        response.status(500).end()
-    }
-})
-*/
-/*
-app.get("/recipes/:id", async function(request, response){
-    try {
-        
-        const recipeId = request.params.id // retrieve the recipe ID from the request parameters
-        const query = "SELECT * FROM recipes WHERE id = ?"
-        const recipe = await pool.query(query, [recipeId])
-        response.status(200).json(recipe) // send the retrieved data back in the response
-    } catch(error) {
-        console.log(error)
-        response.status(500).end()
-    }
-})
-*/
-
-//need to edit this to get the userId
-/*
-app.post("/recipes", async function(request, response){
-    try{
-        const newRecipe = request.body
-        const accountId = 1 //this line needs editing
-        
-        const query = "INSERT INTO recipes (accountId, title, ingredients, directives) VALUES (?, ?, ?, ?)"
-        await pool.query(query, [accountId, newRecipe.title, newRecipe.ingredients, newRecipe.directives])
-        response.status(201).end()
-    }
-    catch(error){
-        console.log(error);
-        response.status(500).end()
-    }
-})
-*/
-/*
-app.put("/recipes/:id", async function(request, response){
-    try{
-        const newRecipe = request.body
-        
-        const recipeId = request.params.id
-        const query = "UPDATE recipes SET title = ?, ingredients = ?, directives = ? WHERE id = ?"
-        await pool.query(query , [newRecipe.title, newRecipe.ingredients, newRecipe.directives, recipeId])
-        response.status(200).end()
-    }
-    catch(error){
-        console.log(error);
-        response.status(500).end()
-    }
-})
-*/
-/*
-app.delete("/recipes/:id", async function(request, response){
-    try{
-        
-        const recipeId = request.params.id
-        const query = "DELETE FROM recipes WHERE id = ?"
-        await pool.query(query, [recipeId])
-        response.status(200).end()
-    }
-    catch(error){
-        console.log(error)
-        response.status(500).end()
-    }
-})
-*/
-
 app.get("/comments", async function(request, response){
     try {
         
         const query = "SELECT * FROM comments"
         const comments = await pool.query(query)
-        response.status(200).json(comments) // send the retrieved data back in the response
+        response.status(200).json(comments)
     } catch(error) {
         console.log(error)
         response.status(500).json(comments)
     }
 })
-/*
-app.get("/recipes/:id/comments", async function(request, response){
-    try{
-        
-        const recipeId = request.params.id
-        const query = "SELECT * FROM comments WHERE recipeId = ?"
-        const comments = await pool.query(query, [recipeId])
-        response.status(200).json(comments)
-    }
-    catch(error){
-        console.log(error)
-        response.status(500).end()
-    }
-})
-*/
-/*
-//need to edit this to get the userId
-app.post("/recipes/:id/comments", async function(request, response){
-    try{
-        const newComment = request.body
-        const accountId = 1 //this line needs editing
-        const recipeId = request.params.id
-        
-        const query = "INSERT INTO comments (accountId, recipeId, comment) VALUES (?, ?, ?)"
-        await pool.query(query, [accountId, recipeId, newComment.comment])
-        response.status(201).end()
-    }
-    catch(error){
-        console.log(error);
-        response.status(500).end()
-    }
-})
-*/
+
 app.put("/comments/:id", async function(request, response){
     try{
         const newComment = request.body
@@ -606,20 +430,6 @@ app.put("/comments/:id", async function(request, response){
         response.status(500).end()
     }
 })
-/*
-app.delete("/comments/:id", async function(request, response){
-    try{
-        
-        const commentId = request.params.id
-        const query = "DELETE FROM comments WHERE id = ?"
-        await pool.query(query, [commentId])
-        response.status(200).end()
-    }
-    catch(error){
-        console.log(error)
-        response.status(500).end()
-    }
-}) */
 
 app.get("/accounts", async function(request, response){
     try {
@@ -677,19 +487,5 @@ app.delete("/accounts/:id", async function(request, response){
         response.status(500).end()
     }
 })
-/*
-app.post("/accounts", async function(request, response){
-    try{
-        const newAccount = request.body
-        
-        const query = "INSERT INTO accounts (username, password) VALUES (?, ?)"
-        await pool.query(query, [newAccount.username, newAccount.password])
-        response.status(201).end()
-    }
-    catch(error){
-        console.log(error);
-        response.status(500).end()
-    }
-})
-*/
+
 app.listen(8080)

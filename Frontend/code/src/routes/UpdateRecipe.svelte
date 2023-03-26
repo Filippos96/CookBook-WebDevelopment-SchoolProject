@@ -1,6 +1,6 @@
 <script>
 
-    import { Link } from "svelte-routing";
+    import { user } from "../user-store";
 
     export let id
     let isFetchingRecipe = true
@@ -54,7 +54,8 @@ async function updateRecipe() {
         const response = await fetch("http://localhost:8080/recipes/"+id, {
             method: 'PUT',
             headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Bearer "+$user.accessToken
         },
         body: JSON.stringify(recipe),
         });

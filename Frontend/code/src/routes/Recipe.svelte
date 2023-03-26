@@ -105,7 +105,11 @@
                     const user = await response.json()
                     console.log("USERNAME")
                     console.log(user.username)
-                    return user.username
+                    if(user.username) {
+                        return user.username
+                    } else {
+                        return "WRONGK"
+                    }
                 break;
 
                 case 400:
